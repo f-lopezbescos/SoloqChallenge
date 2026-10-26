@@ -3,29 +3,264 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Clasificación LoL</title>
+<title>Clasificación LoL · Torneo privado</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <style>
-  body { font-family: system-ui, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1rem; }
-  table { width: 100%; border-collapse: collapse; }
-  th, td { padding: .6rem; text-align: left; border-bottom: 1px solid #ddd; }
-  small { color: #777; }
+:root{
+  --bg:#010a13; --panel:rgba(9,20,40,.82); --line:#463714; --gold:#c8aa6e; --gold-hi:#f0e6d2;
+  --teal:#0ac8b9; --text:#a09b8c; --up:#2fbf71; --down:#e84057;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; min-height:100vh; color:var(--text);
+  font-family:"Barlow",system-ui,sans-serif;
+  background:
+    radial-gradient(ellipse at 50% -10%, rgba(10,200,185,.18), transparent 55%),
+    radial-gradient(ellipse at 90% 100%, rgba(200,170,110,.12), transparent 50%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='100' viewBox='0 0 56 100'%3E%3Cpath d='M28 66L0 50L0 16L28 0L56 16L56 50L28 66L28 100' fill='none' stroke='%23c8aa6e' stroke-opacity='0.07' stroke-width='1.5'/%3E%3Cpath d='M28 0L28 34L0 50L0 84L28 100L56 84L56 50L28 34' fill='none' stroke='%23c8aa6e' stroke-opacity='0.07' stroke-width='1.5'/%3E%3C/svg%3E"),
+    var(--bg);
+  background-attachment:fixed;
+}
+main{max-width:1000px; margin:0 auto; padding:2rem 1rem 3rem}
+header{text-align:center; margin-bottom:2rem}
+h1{
+  font-family:"Cinzel",Georgia,serif; font-weight:800; letter-spacing:.08em; text-transform:uppercase;
+  font-size:clamp(1.6rem,5vw,2.6rem); margin:0; color:var(--gold-hi);
+  text-shadow:0 0 18px rgba(200,170,110,.45);
+}
+.sub{color:var(--teal); letter-spacing:.2em; text-transform:uppercase; font-size:.8rem; margin-top:.4rem}
+.divider{height:2px; margin:1.2rem auto 0; width:min(420px,80%);
+  background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.card{
+  background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:1.25rem; margin-bottom:1.5rem;
+  backdrop-filter:blur(4px); box-shadow:0 0 0 1px rgba(200,170,110,.08) inset, 0 10px 30px rgba(0,0,0,.45);
+}
+h2{
+  font-family:"Cinzel",Georgia,serif; font-size:1.05rem; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--gold); margin:0 0 1rem;
+}
+.wrap{overflow-x:auto}
+table{width:100%; border-collapse:collapse; min-width:620px}
+th{
+  text-align:left; font-weight:600; font-size:.72rem; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--gold); padding:.6rem .7rem; border-bottom:1px solid var(--line);
+}
+td{padding:.75rem .7rem; border-bottom:1px solid rgba(70,55,20,.45); color:var(--gold-hi); font-weight:500}
+tr:last-child td{border-bottom:none}
+tbody tr:hover{background:rgba(200,170,110,.06)}
+.pos{font-family:"Cinzel",serif; font-weight:800; width:2.5rem}
+.p1{color:#f4c874} .p2{color:#c4ccd6} .p3{color:#cd8a5a}
+.name{font-weight:600}
+.badge{
+  display:inline-block; padding:.15rem .6rem; border-radius:3px; font-size:.82rem; font-weight:600;
+  border:1px solid currentColor; background:rgba(0,0,0,.25);
+}
+.muted{color:var(--text)}
+.bar{display:inline-block; width:70px; height:6px; background:rgba(255,255,255,.1); border-radius:3px;
+  vertical-align:middle; margin-left:.5rem; overflow:hidden}
+.bar i{display:block; height:100%; background:var(--teal)}
+.up{color:var(--up)} .down{color:var(--down)} .flat{color:var(--text)}
+.grid{display:grid; gap:1.5rem}
+.chart-box{position:relative; height:360px}
+.hint{font-size:.85rem; color:var(--text); margin:.8rem 0 0}
+footer{text-align:center; font-size:.72rem; line-height:1.5; color:#6b675c; margin-top:2rem}
+#updated{text-align:right; font-size:.8rem; margin:-.4rem 0 1rem}
 </style>
 </head>
 <body>
-<h1>Clasificación Solo/Duo</h1>
-<table>
-  <thead><tr><th>#</th><th>Cuenta</th><th>Rango</th><th>LP</th><th>Partidas</th></tr></thead>
-  <tbody id="rows"></tbody>
-</table>
-<small id="updated"></small>
+<main>
+  <header>
+    <h1>Clasificación del torneo</h1>
+    <div class="sub">Solo/Duo · Grieta del Invocador</div>
+    <div class="divider"></div>
+  </header>
+
+  <section class="card">
+    <h2>Tabla de clasificación</h2>
+    <div id="updated"></div>
+    <div class="wrap">
+      <table>
+        <thead><tr>
+          <th>#</th><th>Invocador</th><th>Rango</th><th>LP</th><th>Partidas</th><th>V / D</th><th>Win rate</th><th>Hoy</th>
+        </tr></thead>
+        <tbody id="rows"><tr><td colspan="8">Cargando…</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Evolución del ELO día a día</h2>
+    <div class="chart-box"><canvas id="eloChart"></canvas></div>
+    <p class="hint" id="eloHint"></p>
+  </section>
+
+  <section class="card">
+    <h2>Win rate</h2>
+    <div class="chart-box" id="wrBox"><canvas id="wrChart"></canvas></div>
+  </section>
+
+  <footer>
+    Esta web no está respaldada por Riot Games y no refleja los puntos de vista ni las opiniones de Riot Games
+    ni de nadie involucrado oficialmente en la producción o gestión de las propiedades de Riot Games.
+    Riot Games y todas las propiedades asociadas son marcas comerciales o marcas registradas de Riot Games, Inc.
+  </footer>
+</main>
+
 <script>
-fetch("data.json?t=" + Date.now()).then(r => r.json()).then(d => {
-  document.getElementById("rows").innerHTML = d.players.map((p, i) =>
-    `<tr><td>${i+1}</td><td>${p.name}</td><td>${p.tier} ${p.rank}</td><td>${p.lp}</td><td>${p.games}</td></tr>`
-  ).join("");
-  document.getElementById("updated").textContent =
-    "Última actualización: " + new Date(d.updated).toLocaleString("es-ES");
-});
+const TIER_KEYS = ["IRON","BRONZE","SILVER","GOLD","PLATINUM","EMERALD","DIAMOND","MASTER","GRANDMASTER","CHALLENGER"];
+const TIER_ES = ["Hierro","Bronce","Plata","Oro","Platino","Esmeralda","Diamante","Maestro","Gran Maestro","Aspirante"];
+const TIER_COLORS = {
+  IRON:"#8a8a8a", BRONZE:"#c0804d", SILVER:"#b4bdc8", GOLD:"#c8aa6e", PLATINUM:"#4fb3ab",
+  EMERALD:"#2fbf71", DIAMOND:"#6f86e8", MASTER:"#b25af0", GRANDMASTER:"#e05555", CHALLENGER:"#f4c874",
+  UNRANKED:"#6b675c"
+};
+const DIV = ["IV","III","II","I"];
+const PALETTE = ["#f0b232","#0ac8b9","#e84057","#5383e8","#b25af0","#2fbf71","#ff7d4d","#d6d6d6"];
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const dayKey = t => new Date(t).toLocaleDateString("sv-SE");
+const fmtDay = k => { const [, m, d] = k.split("-"); return d + "/" + m; };
+
+function rankLabel(s){
+  s = Math.round(s);
+  if (s >= 2800) return "Maestro+ " + (s - 2800) + " LP";
+  const t = Math.floor(s / 400), d = Math.floor((s % 400) / 100), lp = s % 100;
+  return TIER_ES[t] + " " + DIV[d] + " · " + lp + " LP";
+}
+function tierName(p){
+  const i = TIER_KEYS.indexOf(p.tier);
+  if (i < 0) return "Sin clasificar";
+  return i >= 7 ? TIER_ES[i] : TIER_ES[i] + " " + p.rank;
+}
+function dayRange(start, end){
+  const out = [], d = new Date(start + "T12:00:00"), e = new Date(end + "T12:00:00");
+  while (d <= e){ out.push(d.toLocaleDateString("sv-SE")); d.setDate(d.getDate() + 1); }
+  return out;
+}
+function deltaHtml(v){
+  if (v === null) return '<span class="flat">–</span>';
+  if (v > 0) return '<span class="up">▲ +' + v + '</span>';
+  if (v < 0) return '<span class="down">▼ ' + v + '</span>';
+  return '<span class="flat">= 0</span>';
+}
+
+function render(data, history){
+  const players = data.players;
+  $("updated").textContent = "Última actualización: " + new Date(data.updated).toLocaleString("es-ES");
+
+  const today = dayKey(new Date().toISOString());
+  const allDays = players.flatMap(p => (history[p.name] || []).map(s => dayKey(s.t))).sort();
+  const days = dayRange(allDays[0] || today, today);
+
+  const series = {};
+  players.forEach(p => {
+    const byDay = {};
+    (history[p.name] || []).forEach(s => { byDay[dayKey(s.t)] = s.score; });
+    let cur = null;
+    series[p.name] = days.map(d => { if (byDay[d] !== undefined) cur = byDay[d]; return cur; });
+  });
+
+  // Tabla
+  $("rows").innerHTML = players.length ? players.map((p, i) => {
+    const snaps = history[p.name] || [];
+    let delta = null;
+    if (p.score >= 0 && snaps.length){
+      const ser = series[p.name];
+      const prev = ser.length > 1 ? ser[ser.length - 2] : null;
+      delta = p.score - (prev !== null ? prev : snaps[0].score);
+    }
+    const wr = p.games ? p.wins / p.games * 100 : 0;
+    const color = TIER_COLORS[p.tier] || TIER_COLORS.UNRANKED;
+    return '<tr>' +
+      '<td class="pos p' + (i + 1) + '">' + (i + 1) + '</td>' +
+      '<td class="name">' + esc(p.name) + '</td>' +
+      '<td><span class="badge" style="color:' + color + '">' + tierName(p) + '</span></td>' +
+      '<td>' + (p.score >= 0 ? p.lp : "–") + '</td>' +
+      '<td>' + p.games + '</td>' +
+      '<td class="muted"><span class="up">' + p.wins + 'V</span> / <span class="down">' + p.losses + 'D</span></td>' +
+      '<td>' + (p.games ? wr.toFixed(1) + '%<span class="bar"><i style="width:' + wr + '%"></i></span>' : "–") + '</td>' +
+      '<td>' + deltaHtml(delta) + '</td></tr>';
+  }).join("") : '<tr><td colspan="8">Sin datos todavía.</td></tr>';
+
+  Chart.defaults.color = "#a09b8c";
+  Chart.defaults.font.family = "Barlow, system-ui, sans-serif";
+  const grid = { color: "rgba(200,170,110,.12)" };
+
+  // Gráfica ELO
+  if (window.eloChart) window.eloChart.destroy();
+  const ranked = players.filter(p => p.score >= 0);
+  window.eloChart = new Chart($("eloChart"), {
+    type: "line",
+    data: {
+      labels: days.map(fmtDay),
+      datasets: ranked.map((p, i) => ({
+        label: p.name, data: series[p.name],
+        borderColor: PALETTE[i % PALETTE.length], backgroundColor: PALETTE[i % PALETTE.length],
+        tension: .25, spanGaps: true, borderWidth: 2.5, pointRadius: 3.5, pointHoverRadius: 6
+      }))
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: "nearest", intersect: false },
+      scales: {
+        x: { grid },
+        y: { grid, ticks: { callback: v => rankLabel(v) }, grace: "8%" }
+      },
+      plugins: {
+        legend: { labels: { usePointStyle: true, color: "#f0e6d2" } },
+        tooltip: { callbacks: { label: c => c.dataset.label + ": " + rankLabel(c.parsed.y) } }
+      }
+    }
+  });
+  $("eloHint").textContent = days.length < 2
+    ? "Las líneas aparecerán a partir del segundo día de datos. Pulsa un nombre de la leyenda para ocultar o mostrar a un jugador."
+    : "Pulsa un nombre de la leyenda para ocultar o mostrar a un jugador.";
+
+  // Gráfica win rate
+  if (window.wrChart) window.wrChart.destroy();
+  const withGames = players.filter(p => p.games > 0);
+  $("wrBox").style.height = (80 + withGames.length * 44) + "px";
+  window.wrChart = new Chart($("wrChart"), {
+    type: "bar",
+    data: {
+      labels: withGames.map(p => p.name),
+      datasets: [{
+        data: withGames.map(p => +(p.wins / p.games * 100).toFixed(1)),
+        backgroundColor: withGames.map(p => TIER_COLORS[p.tier]),
+        borderRadius: 3
+      }]
+    },
+    options: {
+      indexAxis: "y", responsive: true, maintainAspectRatio: false,
+      scales: { x: { min: 0, max: 100, grid, ticks: { callback: v => v + "%" } }, y: { grid: { display: false } } },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: c => {
+          const p = withGames[c.dataIndex];
+          return c.parsed.x + "% (" + p.wins + "V · " + p.losses + "D)";
+        } } }
+      }
+    }
+  });
+}
+
+async function load(){
+  try {
+    const [d, h] = await Promise.all([
+      fetch("data.json?t=" + Date.now()).then(r => r.json()),
+      fetch("history.json?t=" + Date.now()).then(r => r.ok ? r.json() : {}).catch(() => ({}))
+    ]);
+    render(d, h);
+  } catch (e) {
+    $("rows").innerHTML = '<tr><td colspan="8">No se han podido cargar los datos.</td></tr>';
+  }
+}
+load();
+setInterval(load, 5 * 60 * 1000);
 </script>
 </body>
 </html>
