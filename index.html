@@ -63,7 +63,6 @@ tbody tr:hover{background:rgba(200,170,110,.06)}
   vertical-align:middle; margin-left:.5rem; overflow:hidden}
 .bar i{display:block; height:100%; background:var(--teal)}
 .up{color:var(--up)} .down{color:var(--down)} .flat{color:var(--text)}
-.grid{display:grid; gap:1.5rem}
 .chart-box{position:relative; height:360px}
 .hint{font-size:.85rem; color:var(--text); margin:.8rem 0 0}
 footer{text-align:center; font-size:.72rem; line-height:1.5; color:#6b675c; margin-top:2rem}
@@ -124,6 +123,8 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const dayKey = t => new Date(t).toLocaleDateString("sv-SE");
 const fmtDay = k => { const [, m, d] = k.split("-"); return d + "/" + m; };
+
+let eloInst = null, wrInst = null;
 
 function rankLabel(s){
   s = Math.round(s);
@@ -188,12 +189,12 @@ function render(data, history){
 
   Chart.defaults.color = "#a09b8c";
   Chart.defaults.font.family = "Barlow, system-ui, sans-serif";
-  const grid = { color: "rgba(200,170,110,.12)" };
+  const gridStyle = { color: "rgba(200,170,110,.12)" };
 
   // Gráfica ELO
-  if (window.eloChart) window.eloChart.destroy();
+  if (eloInst) eloInst.destroy();
   const ranked = players.filter(p => p.score >= 0);
-  window.eloChart = new Chart($("eloChart"), {
+  eloInst = new Chart($("eloChart"), {
     type: "line",
     data: {
       labels: days.map(fmtDay),
@@ -207,8 +208,8 @@ function render(data, history){
       responsive: true, maintainAspectRatio: false,
       interaction: { mode: "nearest", intersect: false },
       scales: {
-        x: { grid },
-        y: { grid, ticks: { callback: v => rankLabel(v) }, grace: "8%" }
+        x: { grid: gridStyle },
+        y: { grid: gridStyle, ticks: { callback: v => rankLabel(v) }, grace: "8%" }
       },
       plugins: {
         legend: { labels: { usePointStyle: true, color: "#f0e6d2" } },
@@ -221,10 +222,10 @@ function render(data, history){
     : "Pulsa un nombre de la leyenda para ocultar o mostrar a un jugador.";
 
   // Gráfica win rate
-  if (window.wrChart) window.wrChart.destroy();
+  if (wrInst) wrInst.destroy();
   const withGames = players.filter(p => p.games > 0);
   $("wrBox").style.height = (80 + withGames.length * 44) + "px";
-  window.wrChart = new Chart($("wrChart"), {
+  wrInst = new Chart($("wrChart"), {
     type: "bar",
     data: {
       labels: withGames.map(p => p.name),
@@ -236,7 +237,10 @@ function render(data, history){
     },
     options: {
       indexAxis: "y", responsive: true, maintainAspectRatio: false,
-      scales: { x: { min: 0, max: 100, grid, ticks: { callback: v => v + "%" } }, y: { grid: { display: false } } },
+      scales: {
+        x: { min: 0, max: 100, grid: gridStyle, ticks: { callback: v => v + "%" } },
+        y: { grid: { display: false } }
+      },
       plugins: {
         legend: { display: false },
         tooltip: { callbacks: { label: c => {
@@ -248,7 +252,7 @@ function render(data, history){
   });
 }
 
-async function load(){
+async function cargar(){
   try {
     const [d, h] = await Promise.all([
       fetch("data.json?t=" + Date.now()).then(r => r.json()),
@@ -256,11 +260,12 @@ async function load(){
     ]);
     render(d, h);
   } catch (e) {
+    console.error(e);
     $("rows").innerHTML = '<tr><td colspan="8">No se han podido cargar los datos.</td></tr>';
   }
 }
-load();
-setInterval(load, 5 * 60 * 1000);
+cargar();
+setInterval(cargar, 5 * 60 * 1000);
 </script>
 </body>
 </html>
