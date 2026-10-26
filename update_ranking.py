@@ -6,8 +6,7 @@ ROUTING = "europe"   # europe para EUW/EUNE/TR/RU; americas para NA/BR/LAN; asia
 PLATFORM = "euw1"
 
 ACCOUNTS = [  # (nombre, tag)
-    ("Jugador1", "EUW"), ("Jugador2", "EUW"), ("Jugador3", "EUW"), ("Jugador4", "EUW"),
-    ("Jugador5", "EUW"), ("Jugador6", "EUW"), ("Jugador7", "EUW"), ("Jugador8", "EUW"),
+    ("Fr4nux", "EUW"),
 ]
 
 TIERS = ["IRON","BRONZE","SILVER","GOLD","PLATINUM","EMERALD","DIAMOND","MASTER","GRANDMASTER","CHALLENGER"]
