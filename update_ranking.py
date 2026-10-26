@@ -7,7 +7,7 @@ PLATFORM = "euw1"
 
 ACCOUNTS = [  # (nombre, tag)
     ("Fr4nux", "EUW"),
-    # ("Jugador2", "EUW"),
+    ("grangalax", "EUW"),
 ]
 
 TIERS = ["IRON","BRONZE","SILVER","GOLD","PLATINUM","EMERALD","DIAMOND","MASTER","GRANDMASTER","CHALLENGER"]
